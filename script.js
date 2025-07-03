@@ -54,9 +54,26 @@ window.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('passo1').style.display = 'none';
     document.getElementById('passo2').style.display = 'none';
-    document.getElementById('cadastroForm').style.display = 'none';
+    form.style.display = 'none';
     document.getElementById('camposExtrasMembro').style.display = 'none';
     document.getElementById('convidadoExtra').style.display = 'none';
+  }
+
+  const dataInput = document.getElementById("dataNascimento");
+  if (dataInput) {
+    dataInput.addEventListener("input", () => {
+      let valor = dataInput.value.replace(/\D/g, '');
+      if (valor.length > 8) valor = valor.slice(0, 8);
+
+      if (valor.length >= 5)
+        dataInput.value = `${valor.slice(0, 2)}/${valor.slice(2, 4)}/${valor.slice(4)}`;
+      else if (valor.length >= 3)
+        dataInput.value = `${valor.slice(0, 2)}/${valor.slice(2)}`;
+      else
+        dataInput.value = valor;
+
+      verificarObrigatoriedadeIdade();
+    });
   }
 });
 
@@ -77,52 +94,41 @@ function aplicarMascaraTelefone(input) {
   });
 }
 
-// ✅ Nova função de verificação da idade com campo único
 function verificarObrigatoriedadeIdade() {
-  const dataInput = document.getElementById('dataNascimento');
-  const nascimentoStr = dataInput?.value;
-  if (!nascimentoStr) return;
+  const dataStr = document.getElementById("dataNascimento")?.value;
+  if (!dataStr) return;
 
-  const nascimento = new Date(nascimentoStr);
+  const [dia, mes, ano] = dataStr.split("/");
+  if (!dia || !mes || !ano) return;
+
+  const nascimento = new Date(`${ano}-${mes}-${dia}`);
+  if (isNaN(nascimento)) return;
+
   const hoje = new Date();
   let idade = hoje.getFullYear() - nascimento.getFullYear();
   const m = hoje.getMonth() - nascimento.getMonth();
   if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
 
-  const idadeInput = document.getElementById('idade');
-  if (idadeInput) idadeInput.value = idade;
+  document.getElementById("idade").value = idade;
 
-  const nomePai = document.getElementById('nome_pai');
-  const nomeMae = document.getElementById('nome_mae');
+  const nomePai = document.getElementById("nome_pai");
+  const nomeMae = document.getElementById("nome_mae");
 
   if (idade < 18) {
-    if (nomePai) {
-      nomePai.required = true;
-      nomePai.style.borderColor = "red";
-      nomePai.placeholder = "Nome do Pai (Obrigatório)";
-    }
-    if (nomeMae) {
-      nomeMae.required = true;
-      nomeMae.style.borderColor = "red";
-      nomeMae.placeholder = "Nome da Mãe (Obrigatório)";
-    }
+    nomePai.required = true;
+    nomeMae.required = true;
+    nomePai.style.borderColor = "red";
+    nomeMae.style.borderColor = "red";
+    nomePai.placeholder = "Nome do Pai (Obrigatório)";
+    nomeMae.placeholder = "Nome da Mãe (Obrigatório)";
   } else {
-    if (nomePai) {
-      nomePai.required = false;
-      nomePai.style.borderColor = "";
-      nomePai.placeholder = "Nome do Pai (Opcional)";
-    }
-    if (nomeMae) {
-      nomeMae.required = false;
-      nomeMae.style.borderColor = "";
-      nomeMae.placeholder = "Nome da Mãe (Opcional)";
-    }
+    nomePai.required = false;
+    nomeMae.required = false;
+    nomePai.style.borderColor = "";
+    nomeMae.style.borderColor = "";
+    nomePai.placeholder = "Nome do Pai (Opcional)";
+    nomeMae.placeholder = "Nome da Mãe (Opcional)";
   }
-}
-
-const dataInput = document.getElementById("dataNascimento");
-if (dataInput) {
-  dataInput.addEventListener("input", verificarObrigatoriedadeIdade);
 }
 
 window.respostaConvidado = function(ehConvidado) {
@@ -234,12 +240,8 @@ if (form) {
 }
 
 window.novoCadastro = function () {
-  const m1 = document.getElementById('mensagemConvidado');
-  const m2 = document.getElementById('mensagemMembro');
-
-  if (m1) m1.style.display = 'none';
-  if (m2) m2.style.display = 'none';
-
+  document.getElementById('mensagemConvidado')?.style?.setProperty("display", "none");
+  document.getElementById('mensagemMembro')?.style?.setProperty("display", "none");
   document.getElementById('passo1').style.display = 'block';
   document.getElementById('passo2').style.display = 'none';
   document.getElementById('cadastroForm').style.display = 'none';
@@ -256,7 +258,6 @@ window.voltarParaFormulario = function () {
   document.getElementById('passo1').style.display = 'block';
 };
 
-// ✅ Editar cadastro
 window.editarCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
@@ -279,6 +280,7 @@ window.editarCadastro = async function () {
     }
 
     document.getElementById("idade").value = dados.idade || "";
+    document.getElementById("dataNascimento").value = dados.dataNascimento || "";
 
     if (dados.quemConvidou) {
       convidadoExtra.style.display = "block";
@@ -305,7 +307,6 @@ window.editarCadastro = async function () {
   }
 };
 
-// ✅ Excluir cadastro
 window.excluirCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
@@ -326,16 +327,3 @@ window.excluirCadastro = async function () {
     console.error(err);
   }
 };
-
-document.addEventListener('DOMContentLoaded', function () {
-  const elem = document.getElementById('dataNascimento');
-  if (elem) {
-    const datepicker = new Datepicker(elem, {
-      autohide: true,
-      format: 'yyyy-mm-dd',
-      maxDate: new Date()
-    });
-
-    elem.addEventListener("changeDate", verificarObrigatoriedadeIdade);
-  }
-});
