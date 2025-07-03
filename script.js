@@ -326,3 +326,16 @@ window.excluirCadastro = async function () {
     console.error(err);
   }
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+  const elem = document.getElementById('dataNascimento');
+  if (elem) {
+    const datepicker = new Datepicker(elem, {
+      autohide: true,
+      format: 'yyyy-mm-dd',
+      maxDate: new Date()
+    });
+
+    elem.addEventListener("changeDate", verificarObrigatoriedadeIdade);
+  }
+});
