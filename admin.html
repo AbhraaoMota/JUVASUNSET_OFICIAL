@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Painel Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+   <header class="menu">
+    <nav>
+      <ul>
+        <!-- <li><a href="admin.html">Login</a></li> -->
+        <li><a href="painel.html">Painel Admin</a></li>
+        <!-- <li><a href="index.html">Cadastro</a></li>
+        <li><a href="#" onclick="logout()">Sair</a></li> -->
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="senha" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+      <button onclick="voltarParaCadastro()">Voltar</button>
+
+    </form>
+  </main>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

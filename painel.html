@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="menu">
+    <nav>
+      <ul>
+        <!-- <li><a href="admin.html">Login</a></li> -->
+        <li><a href="painel.html">Painel Admin</a></li>
+        <!-- <li><a href="index.html">Cadastro</a></li>
+        <li><a href="#" onclick="logout()">Sair</a></li> -->
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+  <h2>Painel de Inscritos</h2>
+
+    <label for="setorSelect">Filtrar por setor:</label>
+    <select id="setorSelect">
+      <option value="">Todos os setores</option>
+      <option value="Convidados">Convidados</option>
+      <option value="AD Sede">AD Sede</option>
+      <option value="AD Planalto">AD Planalto</option>
+      <option value="AD Icarai">AD Icarai</option>
+      <option value="AD Metropolitano">AD Metropolitano</option>
+      <option value="AD Quintino Cunha">AD Quintino Cunha</option>
+      <option value="AD Arianopolis">AD Arianopolis</option>
+      <option value="AD Tanupaba">AD Tanupaba</option>
+    </select>
+
+    <br><br>
+   
+    <button onclick="gerarPDF()">📄 Gerar PDF</button>
+    <button onclick="voltarParaCadastro()">Voltar</button>
+    <button onclick="logout()">🔓 Sair</button>
+
+    </main>
+  <!-- Firebase Auth check -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFzOB4EDaNrdEIcg_NVixSU_Y0tOmf8JM",
+      authDomain: "juva-web.firebaseapp.com",
+      projectId: "juva-web",
+      storageBucket: "juva-web.firebasestorage.app",
+      messagingSenderId: "271062195107",
+      appId: "1:271062195107:web:40e8b35d9ad786b245d816"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "admin.html";
+      }
+    });
+  </script>
+
+  <!-- pdfMake -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+  <!-- Painel JS -->
+  <script type="module" src="painel.js"></script>
+</body>
+</html>

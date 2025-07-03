@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro JUVA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="menu">
+    <nav>
+      <ul>
+        <!-- <li><a href="admin.html">Login</a></li> -->
+        <li><a href="painel.html">Painel Admin</a></li>
+        <!-- <li><a href="index.html">Cadastro</a></li>
+        <li><a href="#" onclick="logout()">Sair</a></li> -->
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1><span>JUVA SUNSET</span></h1>
+
+    <div id="passo1">
+      <p>Você já faz parte da <span>JUVA</span> da Ad Ágape?</p>
+      <button onclick="respostaConvidado(false)">Sim</button>
+      <button onclick="respostaConvidado(true)">Não</button> <br>
+      <strong><span>OBS:</span> Só conclua o cadastrado<br>se estiver conectado a internet!</strong>
+    </div>
+
+    <div id="passo2" style="display:none;">
+      <p>Informe sua congregação:</p>
+      <label for="congregacao"><strong></strong></label>
+      <select id="selectCongregacao">
+        <option value="">Selecione...</option>
+        <option value="AD Sede">AD Sede</option>
+        <option value="AD Planalto">AD Planalto</option>
+        <option value="AD Icarai">AD Icarai</option>
+        <option value="AD Metropolitano">AD Metropolitano</option>
+        <option value="AD Quintino Cunha">AD Quintino Cunha</option>
+        <option value="AD Arianopolis">AD Arianopolis</option>
+        <option value="AD Tanupaba">AD Tanupaba</option>
+      </select><br>
+
+      <div class="checkbox-wrapper">
+        <label for="lider_juventude">
+          <input type="checkbox" id="lider_juventude" name="lider_juventude">
+          Sou líder da juventude
+        </label>
+      </div>
+
+      <strong><span>OBS:</span> So marque esta opção se você for realmente <br> lider de juventude do setor selecionado!</strong><br>
+
+      <button onclick="voltarParaFormulario()">Voltar</button>
+      <button onclick="avancarParaFormulario()">Continuar</button>
+    </div>
+
+    <div id="convidadoExtra" style="display:none;">
+      
+      <label for="quemConvidou"><strong>Quem lhe convidou?</strong></label><br>
+      <input type="text" id="quemConvidou" placeholder="Quem lhe convidou?" required><br>
+      <label for="contatoConvidador"><strong>Telefone de quem lhe convidou</strong></label><br>
+      <input type="tel" id="contatoConvidador" placeholder="Telefone do convidador" required><br>
+      <label for="setorConvidador"><strong>Quem lhe lhe convidou é de qual congreção?</strong></label><br>
+      <select id="setorConvidador" required>
+        <option value="">Setor do convidador</option>
+        <option value="AD Sede">AD Sede</option>
+        <option value="AD Planalto">AD Planalto</option>
+        <option value="AD Icarai">AD Icarai</option>
+        <option value="AD Metropolitano">AD Metropolitano</option>
+        <option value="AD Quintino Cunha">AD Quintino Cunha</option>
+        <option value="AD Arianopolis">AD Arianopolis</option>
+        <option value="AD Tanupaba">AD Tanupaba</option>
+        <option value="Não sei">Não sei</option>
+      </select><br>
+      
+      <button onclick="voltarParaFormulario()">Voltar</button>
+      <button onclick="continuarCadastroConvidado()">Continuar</button>
+    </div>
+
+    <form id="cadastroForm" style="display:none;">
+      
+      <label for="nome"><strong>Seu Nome</strong></label><br>
+      <input type="text" name="nome" placeholder="Nome" required><br>
+
+      <div style="width: 100%;">
+        <label for="dataNascimento"><strong>Data de Nascimento</strong></label><br>
+        <input type="number" id="diaNascimento" placeholder="Dia" min="1" max="31" required>
+        <input type="number" id="mesNascimento" placeholder="Mês" min="1" max="12" required>
+        <input type="number" id="anoNascimento" placeholder="Ano" min="1900" max="2100" required>
+        <input type="hidden" name="idade" id="idade">
+      </div>
+
+      <label for="WhatsApp"><strong>Seu contato WhatsApp</strong></label><br>
+      <input type="tel" name="contato" id="contato" placeholder="WhatsApp" required><br>
+
+      <div id="camposExtrasMembro">
+        <label for="nome_pai" id="labelPai"><strong>Nome do Pai</strong></label><br>
+        <input type="text" name="nome_pai" id="nome_pai" placeholder="Nome do Pai (Obrigatório)"><br>
+        <label for="nome_mae" id="labelMae"><strong>Nome da Mãe</strong></label><br>
+        <input type="text" name="nome_mae" id="nome_mae" placeholder="Nome da Mãe (Obrigatório)"><br>
+        <label for="email"><strong>Email</strong></label><br>
+        <input type="email" name="email" placeholder="Email"><br>
+        <label for="contato_emergencia"><strong>Contato de Emergência</strong></label><br>
+        <input type="tel" name="contato_emergencia" id="contato_emergencia" placeholder="Contato de Emergência"><br>
+        <label for="text"><strong>De preferência de pais ou algum responsável legal!</strong></label><br><br>
+        <label for="endereco"><strong>Endereço Completo</strong></label><br>
+        <input type="text" name="endereco" placeholder="Endereço"><br>
+        <label for="alergias"><strong>Alergias</strong></label><br>
+        <input type="text" name="alergias" placeholder="Alergias (opcional)"><br>
+      </div>
+
+        
+       <input type="hidden" name="Congregacao" id="hiddenCongregacao">
+      <button onclick="voltarParaFormulario()">Voltar</button>
+      <button type="submit">Cadastrar</button>
+    </form>
+
+    <!-- MENSAGEM PARA MEMBRO -->
+        <div id="mensagemMembro" style="display: none; text-align: center; padding: 30px;">
+
+          <p>
+            Você foi cadastrado com sucesso para o <span>JUVA SUNSET!</span> <br><br>
+
+            📍 Local: <a href="https://maps.app.goo.gl/8BmQgB9VMbvbyYk97" target="_blank">Lagoa do Banana</a><br>
+            ⛺ Atividade: A <span>JUVA</span> do Campo estará reunida a partir das 9h da manhã, durante todo o dia, em comunhão, louvor e amizade.<br>
+            🙏 Encerramento: Às 17h, teremos um culto especial da <span>JUVA</span>, celebrando juntos ao pôr do sol. <br><br>
+
+            Será um dia inesquecível de união, fé e celebração ao nosso Deus.
+            Venha preparado para viver experiências únicas com o Senhor e com a família <span>JUVA!</span>   <br><br>
+
+            ❗ Não perca! Contamos com sua presença! <br><br>
+
+            Com carinho,
+            Equipe <span>JUVA SUNSET!</span><br><br> 
+
+            💰<span>Contribuição:</span> <br>
+            Será cobrada uma taxa de <span>R$20,00 por pessoa,</span><br>
+            que <span>inclui almoço e café da tarde.</span><br><br>
+
+           <span> Formas de pagamento:</span><br>
+
+            <span>Pix</span> <a href="financeiroteen01@gmail.com" target="_blank">financeiroteen01@gmail.com</a><br>
+            (Envie o comprovante para sua liderança) <br>
+
+            <span>Dinheiro ou Cartão:</span> Entre em contato com a sua liderança.<br><br>
+
+            🎒 <span>O que levar:</span><br>
+            <span>Lanche</span> (opcional, caso deseje algo extra) <br>
+
+            <span>Garrafa de água</span><br>
+
+            <span>Itens de higiene pessoal</span><br>
+
+            <span>Roupa de banho</span><br>
+          </p>
+         
+          <button onclick="novoCadastro()">Novo Cadastro</button>
+        </div>
+
+      <!-- MENSAGEM PARA CONVIDADO -->
+      <div id="mensagemConvidado" style="display: none; text-align: center; padding: 30px;">
+        <h2 style="color: green;">✅ Cadastro Concluído!</h2><br>
+        <p>
+          Você foi registrado com sucesso no</strong><span>JUVA SUNSET!</span><br><br>
+          📍 Local: <a href="https://maps.app.goo.gl/8BmQgB9VMbvbyYk97" target="_blank">Lagoa do Banana</a><br><br>
+          📅 Data: 12 de Julho<br>
+          🕔 Horário: O culto será ás 17H. <br><br>
+          
+          Será um momento especial.<br>Esperamos você!
+        </p>
+
+        <button onclick="novoCadastro()">Novo Cadastro</button>
+      </div>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
