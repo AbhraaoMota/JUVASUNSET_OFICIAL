@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/fireba
 import {
   getFirestore,
   doc,
-  setDoc
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
 
 // 🔧 Configuração do Firebase
@@ -19,7 +20,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Armazena conteúdo original das mensagens
 let originalMensagemMembro = "";
 let originalMensagemConvidado = "";
 
@@ -226,6 +226,8 @@ if (form) {
       localStorage.setItem('cadastroConcluido', 'true');
       localStorage.setItem('ehConvidado', isConvidado ? 'true' : 'false');
       localStorage.setItem('nomeCadastrado', nome);
+      localStorage.setItem('docIdCadastro', docId);
+      localStorage.setItem('setorCadastro', setor);
 
       const saudacaoHTML = `<h2 style="color: green;">✅ Cadastro Concluído!</h2><br><h3>Olá, ${nome}!</h3><br>`;
       const mensagemMembro = document.getElementById('mensagemMembro');
@@ -262,11 +264,90 @@ window.novoCadastro = function () {
   document.getElementById('cadastroForm').reset();
 };
 
-// ✅ Botão "Voltar"
+// ✅ Voltar
 window.voltarParaFormulario = function () {
   document.getElementById('cadastroForm').style.display = 'none';
   document.getElementById('camposExtrasMembro').style.display = 'none';
   document.getElementById('convidadoExtra').style.display = 'none';
   document.getElementById('passo2').style.display = 'none';
   document.getElementById('passo1').style.display = 'block';
+};
+
+// ✅ Editar Cadastro
+window.editarCadastro = async function () {
+  const docId = localStorage.getItem("docIdCadastro");
+  const setor = localStorage.getItem("setorCadastro");
+
+  if (!docId || !setor) {
+    return alert("Nenhum cadastro anterior encontrado.");
+  }
+
+  try {
+    const ref = doc(db, "cadastros", setor, "inscritos", docId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      return alert("Cadastro não encontrado no banco de dados.");
+    }
+
+    const dados = snap.data();
+    const form = document.getElementById("cadastroForm");
+    const camposExtras = document.getElementById("camposExtrasMembro");
+    const convidadoExtra = document.getElementById("convidadoExtra");
+
+    for (const key in dados) {
+      const campo = document.querySelector(`[name="${key}"]`);
+      if (campo) campo.value = dados[key];
+    }
+
+    document.getElementById("idade").value = dados.idade || "";
+
+    if (dados.quemConvidou) {
+      convidadoExtra.style.display = "block";
+      camposExtras.style.display = "none";
+      document.getElementById("quemConvidou").value = dados.quemConvidou || "";
+      document.getElementById("contatoConvidador").value = dados.contatoConvidador || "";
+      document.getElementById("setorConvidador").value = dados.Congregacao || "";
+    } else {
+      convidadoExtra.style.display = "none";
+      camposExtras.style.display = "block";
+      document.getElementById("selectCongregacao").value = dados.Congregacao || "";
+    }
+
+    document.getElementById("lider_juventude").checked = dados.lider_juventude === "sim";
+
+    document.getElementById("mensagemMembro").style.display = "none";
+    document.getElementById("mensagemConvidado").style.display = "none";
+    form.style.display = "block";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (err) {
+    alert("Erro ao buscar dados: " + err.message);
+    console.error("Erro ao carregar dados do Firebase:", err);
+  }
+};
+
+window.excluirCadastro = async function () {
+  const docId = localStorage.getItem("docIdCadastro");
+  const setor = localStorage.getItem("setorCadastro");
+
+  if (!docId || !setor) {
+    return alert("Cadastro anterior não encontrado.");
+  }
+
+  if (!confirm("Tem certeza que deseja excluir seu cadastro? Esta ação é irreversível.")) return;
+
+  try {
+    const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js");
+    const ref = doc(getFirestore(), "cadastros", setor, "inscritos", docId);
+    await deleteDoc(ref);
+
+    localStorage.clear();
+    alert("Cadastro excluído com sucesso.");
+    location.reload();
+  } catch (err) {
+    alert("Erro ao excluir cadastro: " + err.message);
+    console.error("Erro ao excluir:", err);
+  }
 };
