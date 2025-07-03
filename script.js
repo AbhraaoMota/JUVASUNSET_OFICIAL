@@ -3,18 +3,18 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
 
-// 🔧 Configuração do Firebase
+// 🔧 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCFzOB4EDaNrdEIcg_NVixSU_Y0tOmf8JM",
   authDomain: "juva-web.firebaseapp.com",
   projectId: "juva-web",
   storageBucket: "juva-web.firebasestorage.app",
   messagingSenderId: "271062195107",
-  appId: "1:271062195107:web:40e8b35d9ad786b245d816",
-  measurementId: "G-64BMKWS4LL"
+  appId: "1:271062195107:web:40e8b35d9ad786b245d816"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -60,7 +60,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Aplica máscara de telefone
 function aplicarMascaraTelefone(input) {
   input.addEventListener('input', () => {
     let valor = input.value.replace(/\D/g, '');
@@ -78,28 +77,18 @@ function aplicarMascaraTelefone(input) {
   });
 }
 
-// ✅ Cálculo de idade
-function calcularIdade(dia, mes, ano) {
-  const hoje = new Date();
-  const nascimento = new Date(ano, mes - 1, dia);
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-  if (
-    hoje.getMonth() < nascimento.getMonth() ||
-    (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate())
-  ) {
-    idade--;
-  }
-  return idade;
-}
-
-// ✅ Valida obrigatoriedade dos pais e altera placeholders
+// ✅ Nova função de verificação da idade com campo único
 function verificarObrigatoriedadeIdade() {
-  const dia = parseInt(document.getElementById('diaNascimento')?.value);
-  const mes = parseInt(document.getElementById('mesNascimento')?.value);
-  const ano = parseInt(document.getElementById('anoNascimento')?.value);
-  if (!dia || !mes || !ano) return;
+  const dataInput = document.getElementById('dataNascimento');
+  const nascimentoStr = dataInput?.value;
+  if (!nascimentoStr) return;
 
-  const idade = calcularIdade(dia, mes, ano);
+  const nascimento = new Date(nascimentoStr);
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const m = hoje.getMonth() - nascimento.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
+
   const idadeInput = document.getElementById('idade');
   if (idadeInput) idadeInput.value = idade;
 
@@ -131,12 +120,11 @@ function verificarObrigatoriedadeIdade() {
   }
 }
 
-["diaNascimento", "mesNascimento", "anoNascimento"].forEach(id => {
-  const campo = document.getElementById(id);
-  if (campo) campo.addEventListener("input", verificarObrigatoriedadeIdade);
-});
+const dataInput = document.getElementById("dataNascimento");
+if (dataInput) {
+  dataInput.addEventListener("input", verificarObrigatoriedadeIdade);
+}
 
-// ✅ Resposta inicial do usuário
 window.respostaConvidado = function(ehConvidado) {
   document.getElementById('passo1').style.display = 'none';
   if (ehConvidado) {
@@ -146,7 +134,6 @@ window.respostaConvidado = function(ehConvidado) {
   }
 };
 
-// ✅ Continua cadastro de convidado
 window.continuarCadastroConvidado = function () {
   const quem = document.getElementById('quemConvidou')?.value.trim();
   const contato = document.getElementById('contatoConvidador')?.value.trim();
@@ -178,7 +165,6 @@ window.continuarCadastroConvidado = function () {
   }
 };
 
-// ✅ Avança para formulário de membro
 window.avancarParaFormulario = function () {
   const sel = document.getElementById('selectCongregacao');
   if (!sel.value) return alert("Selecione a congregação!");
@@ -190,7 +176,6 @@ window.avancarParaFormulario = function () {
 
 // ✅ Envio do formulário
 const form = document.getElementById('cadastroForm');
-
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -248,7 +233,6 @@ if (form) {
   });
 }
 
-// ✅ Novo cadastro
 window.novoCadastro = function () {
   const m1 = document.getElementById('mensagemConvidado');
   const m2 = document.getElementById('mensagemMembro');
@@ -264,7 +248,6 @@ window.novoCadastro = function () {
   document.getElementById('cadastroForm').reset();
 };
 
-// ✅ Voltar
 window.voltarParaFormulario = function () {
   document.getElementById('cadastroForm').style.display = 'none';
   document.getElementById('camposExtrasMembro').style.display = 'none';
@@ -273,22 +256,17 @@ window.voltarParaFormulario = function () {
   document.getElementById('passo1').style.display = 'block';
 };
 
-// ✅ Editar Cadastro
+// ✅ Editar cadastro
 window.editarCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
 
-  if (!docId || !setor) {
-    return alert("Nenhum cadastro anterior encontrado.");
-  }
+  if (!docId || !setor) return alert("Nenhum cadastro anterior encontrado.");
 
   try {
     const ref = doc(db, "cadastros", setor, "inscritos", docId);
     const snap = await getDoc(ref);
-
-    if (!snap.exists()) {
-      return alert("Cadastro não encontrado no banco de dados.");
-    }
+    if (!snap.exists()) return alert("Cadastro não encontrado.");
 
     const dados = snap.data();
     const form = document.getElementById("cadastroForm");
@@ -315,7 +293,6 @@ window.editarCadastro = async function () {
     }
 
     document.getElementById("lider_juventude").checked = dados.lider_juventude === "sim";
-
     document.getElementById("mensagemMembro").style.display = "none";
     document.getElementById("mensagemConvidado").style.display = "none";
     form.style.display = "block";
@@ -324,23 +301,21 @@ window.editarCadastro = async function () {
 
   } catch (err) {
     alert("Erro ao buscar dados: " + err.message);
-    console.error("Erro ao carregar dados do Firebase:", err);
+    console.error(err);
   }
 };
 
+// ✅ Excluir cadastro
 window.excluirCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
 
-  if (!docId || !setor) {
-    return alert("Cadastro anterior não encontrado.");
-  }
+  if (!docId || !setor) return alert("Cadastro anterior não encontrado.");
 
   if (!confirm("Tem certeza que deseja excluir seu cadastro? Esta ação é irreversível.")) return;
 
   try {
-    const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js");
-    const ref = doc(getFirestore(), "cadastros", setor, "inscritos", docId);
+    const ref = doc(db, "cadastros", setor, "inscritos", docId);
     await deleteDoc(ref);
 
     localStorage.clear();
@@ -348,6 +323,6 @@ window.excluirCadastro = async function () {
     location.reload();
   } catch (err) {
     alert("Erro ao excluir cadastro: " + err.message);
-    console.error("Erro ao excluir:", err);
+    console.error(err);
   }
 };
