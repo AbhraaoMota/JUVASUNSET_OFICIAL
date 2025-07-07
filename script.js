@@ -4,7 +4,9 @@ import {
   doc,
   setDoc,
   getDoc,
-  deleteDoc
+  deleteDoc,
+  collection,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
 
 // 🔧 Firebase Config
@@ -20,10 +22,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 🔒 Limites
+const LIMITE_JUVA = 70;
+const DATA_LIMITE = new Date("2025-07-10T00:00:00-03:00"); // 10 de julho às 00h
+
+async function verificarEncerramentoInscricoes() {
+  const agora = new Date();
+
+  if (agora >= DATA_LIMITE) {
+    exibirMensagemEncerramento("As inscrições foram encerradas no dia 10 de julho à meia-noite. Nos vemos no JUVA SUNSET!");
+    return true;
+  }
+
+  // Se ainda não passou do prazo, verifica limite de JUVA
+  const setores = ["AD Sede", "AD Planalto", "AD Icarai", "AD Metropolitano", "AD Quintino Cunha", "AD Arianopolis", "AD Tanupaba"];
+  let totalMembros = 0;
+
+  for (const setor of setores) {
+    const snap = await getDocs(collection(db, "cadastros", setor, "inscritos"));
+    totalMembros += snap.size;
+    if (totalMembros >= LIMITE_JUVA) {
+      exibirMensagemEncerramento("Limite de 70 inscritos da JUVA foi atingido. As inscrições foram encerradas.");
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function exibirMensagemEncerramento(texto) {
+  document.getElementById("passo1")?.remove();
+  document.getElementById("passo2")?.remove();
+  document.getElementById("cadastroForm")?.remove();
+  document.getElementById("convidadoExtra")?.remove();
+  const container = document.querySelector("main.container");
+  const div = document.createElement("div");
+  div.style.textAlign = "center";
+  div.style.padding = "30px";
+  div.style.color = "red";
+  div.innerHTML = `<h2>🚫 Inscrições Encerradas</h2><p>${texto}</p>`;
+  container?.appendChild(div);
+}
+
 let originalMensagemMembro = "";
 let originalMensagemConvidado = "";
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const bloqueado = await verificarEncerramentoInscricoes();
+  if (bloqueado) return;
+
   const form = document.getElementById('cadastroForm');
   if (!form) return;
 
@@ -239,6 +286,7 @@ if (form) {
   });
 }
 
+// 🔄 Novo cadastro
 window.novoCadastro = function () {
   document.getElementById('mensagemConvidado')?.style?.setProperty("display", "none");
   document.getElementById('mensagemMembro')?.style?.setProperty("display", "none");
@@ -250,6 +298,7 @@ window.novoCadastro = function () {
   document.getElementById('cadastroForm').reset();
 };
 
+// 🔙 Voltar para formulário
 window.voltarParaFormulario = function () {
   document.getElementById('cadastroForm').style.display = 'none';
   document.getElementById('camposExtrasMembro').style.display = 'none';
@@ -258,6 +307,7 @@ window.voltarParaFormulario = function () {
   document.getElementById('passo1').style.display = 'block';
 };
 
+// ✏️ Editar cadastro
 window.editarCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
@@ -307,6 +357,7 @@ window.editarCadastro = async function () {
   }
 };
 
+// 🗑️ Excluir cadastro
 window.excluirCadastro = async function () {
   const docId = localStorage.getItem("docIdCadastro");
   const setor = localStorage.getItem("setorCadastro");
