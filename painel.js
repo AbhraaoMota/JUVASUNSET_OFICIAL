@@ -71,6 +71,13 @@ async function gerarPDF() {
     margin: [0, 0, 0, 20]
   });
 
+  // Mapear duplicados
+  const mapaDuplicados = new Map();
+  Object.values(dadosPorSetor).flat().forEach(p => {
+    const chave = `${p.nome?.trim().toLowerCase()}_${p.contato?.trim()}`;
+    mapaDuplicados.set(chave, (mapaDuplicados.get(chave) || 0) + 1);
+  });
+
   setoresParaExibir.forEach(setor => {
     const inscritos = dadosPorSetor[setor] || [];
     if (inscritos.length > 0) {
@@ -80,7 +87,6 @@ async function gerarPDF() {
         margin: [0, 10, 0, 10]
       });
 
-      // ✅ Líderes ordenados por nome, depois os demais também
       const lideres = inscritos
         .filter(p => p.lider_juventude === "sim")
         .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
@@ -92,15 +98,21 @@ async function gerarPDF() {
       const ordenados = [...lideres, ...outros];
 
       ordenados.forEach(inscrito => {
+        const chave = `${inscrito.nome?.trim().toLowerCase()}_${inscrito.contato?.trim()}`;
+        const isDuplicado = mapaDuplicados.get(chave) > 1;
+
+        const marcaLider = inscrito.lider_juventude === "sim"
+          ? { text: "Líder", color: "#ff6f61", fontSize: 9, margin: [0, 0, 0, 2] }
+          : null;
+
+        const marcaDuplicado = isDuplicado
+          ? { text: "DUPLICADO", color: "red", fontSize: 9, margin: [0, 0, 0, 2] }
+          : null;
+
         const bloco = [
-          ...(inscrito.lider_juventude === "sim"
-            ? [
-                { text: "Líder", color: "#ff6f61", fontSize: 9, margin: [0, 0, 0, 2] },
-                { text: `Nome: ${inscrito.nome || "-"}`, margin: [0, 1] }
-              ]
-            : [
-                { text: `Nome: ${inscrito.nome || "-"}`, margin: [0, 1] }
-              ]),
+          ...(marcaLider ? [marcaLider] : []),
+          ...(marcaDuplicado ? [marcaDuplicado] : []),
+          { text: `Nome: ${inscrito.nome || "-"}`, margin: [0, 1] },
           { text: `Idade: ${inscrito.idade || "-"}`, margin: [0, 1] },
           { text: `Pai: ${inscrito.nome_pai || "-"}`, margin: [0, 1] },
           { text: `Mãe: ${inscrito.nome_mae || "-"}`, margin: [0, 1] },
@@ -112,10 +124,7 @@ async function gerarPDF() {
           { text: `Convidado por: ${inscrito.quemConvidou || "-"}`, margin: [0, 1] },
           { text: `Contato do Convidador: ${inscrito.contatoConvidador || "-"}`, margin: [0, 1] },
           { text: `Congregação: ${inscrito.Congregacao || inscrito.congregacao || "-"}`, margin: [0, 1] },
-          {
-            text: `Assinatura: ___________________________________________`,
-            margin: [0, 6]
-          },
+          { text: `Assinatura: ___________________________________________`, margin: [0, 6] },
           {
             canvas: [{ type: 'line', x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 0.5 }],
             margin: [0, 6, 0, 6]
