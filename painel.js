@@ -66,7 +66,7 @@ async function gerarPDF() {
   });
 
   conteudo.push({
-    text: `Total de inscritos: ${totalInscritos}`,
+    text: `Total de inscritos: ${totalInscritos} / 70`,
     style: "subheader",
     margin: [0, 0, 0, 20]
   });
