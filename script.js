@@ -101,7 +101,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function verificarEncerramentoInscricoes() {
   const agora = new Date();
   if (agora >= DATA_LIMITE) {
-    exibirMensagemEncerramento("As inscrições foram encerradas no dia 10 de julho à meia-noite. Nos vemos no JUVA SUNSET!");
+    exibirMensagemEncerramento("As inscrições para o <strong>JUVA SUNSET</strong> foram oficialmente encerradas! Agradecemos imensamente a todos que se inscreveram. Estamos ansiosos para viver juntos um dia cheio de comunhão, louvor e amizade! 💛 Nos vemos no evento! 🙌 ");
     return true;
   }
   const setores = ["AD Sede", "AD Planalto", "AD Icarai", "AD Metropolitano", "AD Quintino Cunha", "AD Arianopolis", "AD Tanupaba"];
