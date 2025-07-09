@@ -1,3 +1,5 @@
+// painel.js atualizado com novo estilo visual no PDF (modelo aprovado)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
 import {
   getFirestore,
@@ -60,18 +62,28 @@ async function gerarPDF() {
     ? [filtroSelecionado]
     : Object.keys(dadosPorSetor);
 
-  let totalInscritos = 0;
+  let totalLideres = 0;
+  let totalJovens = 0;
+  let totalConvidados = 0;
+
   setoresParaExibir.forEach(setor => {
-    totalInscritos += dadosPorSetor[setor]?.length || 0;
+    const lista = dadosPorSetor[setor] || [];
+    lista.forEach(p => {
+      const ehLider = p.lider_juventude === "sim";
+      const ehConvidado = setor === "Convidados";
+
+      if (ehConvidado) totalConvidados++;
+      else if (ehLider) totalLideres++;
+      else totalJovens++;
+    });
   });
 
   conteudo.push({
-    text: `Total de inscritos: ${totalInscritos} / 70`,
+    text: `Total de Jovens: ${totalJovens} / 70\nLíderes: ${totalLideres} • Convidados: ${totalConvidados}`,
     style: "subheader",
     margin: [0, 0, 0, 20]
   });
 
-  // Mapear duplicados
   const mapaDuplicados = new Map();
   Object.values(dadosPorSetor).flat().forEach(p => {
     const chave = `${p.nome?.trim().toLowerCase()}_${p.contato?.trim()}`;
@@ -87,54 +99,60 @@ async function gerarPDF() {
         margin: [0, 10, 0, 10]
       });
 
-      const lideres = inscritos
-        .filter(p => p.lider_juventude === "sim")
-        .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-      const outros = inscritos
-        .filter(p => p.lider_juventude !== "sim")
-        .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
+      const lideres = inscritos.filter(p => p.lider_juventude === "sim");
+      const outros = inscritos.filter(p => p.lider_juventude !== "sim");
       const ordenados = [...lideres, ...outros];
 
       ordenados.forEach(inscrito => {
         const chave = `${inscrito.nome?.trim().toLowerCase()}_${inscrito.contato?.trim()}`;
         const isDuplicado = mapaDuplicados.get(chave) > 1;
 
-        const marcaLider = inscrito.lider_juventude === "sim"
-          ? { text: "Líder", color: "#ff6f61", fontSize: 9, margin: [0, 0, 0, 2] }
-          : null;
-
-        const marcaDuplicado = isDuplicado
-          ? { text: "DUPLICADO", color: "red", fontSize: 9, margin: [0, 0, 0, 2] }
-          : null;
-
-        const bloco = [
-          ...(marcaLider ? [marcaLider] : []),
-          ...(marcaDuplicado ? [marcaDuplicado] : []),
-          { text: `Nome: ${inscrito.nome || "-"}`, margin: [0, 1] },
-          { text: `Idade: ${inscrito.idade || "-"}`, margin: [0, 1] },
-          { text: `Pai: ${inscrito.nome_pai || "-"}`, margin: [0, 1] },
-          { text: `Mãe: ${inscrito.nome_mae || "-"}`, margin: [0, 1] },
-          { text: `Email: ${inscrito.email || "-"}`, margin: [0, 1] },
-          { text: `WhatsApp: ${inscrito.contato || "-"}`, margin: [0, 1] },
-          { text: `Emergência: ${inscrito.contato_emergencia || "-"}`, margin: [0, 1] },
-          { text: `Endereço: ${inscrito.endereco || "-"}`, margin: [0, 1] },
-          { text: `Alergias: ${inscrito.alergias || "-"}`, margin: [0, 1] },
-          { text: `Convidado por: ${inscrito.quemConvidou || "-"}`, margin: [0, 1] },
-          { text: `Contato do Convidador: ${inscrito.contatoConvidador || "-"}`, margin: [0, 1] },
-          { text: `Congregação: ${inscrito.Congregacao || inscrito.congregacao || "-"}`, margin: [0, 1] },
-          { text: `Assinatura: ___________________________________________`, margin: [0, 6] },
-          {
-            canvas: [{ type: 'line', x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 0.5 }],
-            margin: [0, 6, 0, 6]
-          }
-        ];
+        contadorGlobal++;
+        let pageBreak = "";
+        if (contadorGlobal <= 3 && contadorGlobal % 3 === 0) pageBreak = "after";
+        else if (contadorGlobal > 3 && (contadorGlobal - 3) % 4 === 0) pageBreak = "after";
 
         const ficha = {
-          stack: bloco,
-          margin: [0, 0, 0, 4],
-          pageBreak: (++contadorGlobal % 3 === 0) ? 'after' : ''
+          margin: [0, 0, 0, 10],
+          table: {
+            widths: ['*'],
+            body: [[
+              {
+                stack: [
+                  { text: inscrito.nome || "-", style: "nomePrincipal" },
+                  {
+                    columns: [
+                      (inscrito.lider_juventude === "sim") ? { text: "LÍDER", style: "badgeLider" } : {},
+                      isDuplicado ? { text: "DUPLICADO", style: "badgeDuplicado" } : {},
+                      setor === "Convidados" ? { text: "CONVIDADO", style: "badgeConvidado" } : {}
+                    ].filter(e => Object.keys(e).length > 0)
+                  },
+                  {
+                    columns: [
+                      { text: `Idade: ${inscrito.idade || "-"}`, width: "50%" },
+                      { text: `WhatsApp: ${inscrito.contato || "-"}`, width: "50%" }
+                    ], margin: [0, 5]
+                  },
+                  { columns: [
+                    { text: `Pai: ${inscrito.nome_pai || "-"}`, width: "50%" },
+                    { text: `Mãe: ${inscrito.nome_mae || "-"}`, width: "50%" }
+                  ]},
+                  { text: `Email: ${inscrito.email || "-"}`, margin: [0, 5, 0, 0] },
+                  { text: `Endereço: ${inscrito.endereco || "-"}` },
+                  { text: `Emergência: ${inscrito.contato_emergencia || "-"}` },
+                  { text: `Alergias: ${inscrito.alergias || "-"}` },
+                  { text: `Convidado por: ${inscrito.quemConvidou || "-"}` },
+                  { text: `Contato do Convidador: ${inscrito.contatoConvidador || "-"}` },
+                  { text: `Congregação: ${inscrito.Congregacao || "-"}` },
+                  { text: "Assinatura: _____________________________________________________________________________", margin: [0, 10, 0, 0] }
+                ],
+                fillColor: "#f8f8f8",
+                margin: [10, 6, 10, 6]
+              }
+            ]]
+          },
+          layout: "noBorders",
+          pageBreak
         };
 
         conteudo.push(ficha);
@@ -142,48 +160,23 @@ async function gerarPDF() {
     }
   });
 
-  if (filtroSelecionado) {
-    conteudo.push({
-      text: "\n\nAssinatura do Líder: ___________________________________________",
-      style: "assinaturaLider",
-      margin: [0, 30, 0, 0]
-    });
-  }
-
   const docDefinition = {
     content: conteudo,
     styles: {
-      header: {
-        fontSize: 18,
-        bold: true,
-        alignment: "center"
-      },
-      subheader: {
-        fontSize: 12,
-        alignment: "center",
-        color: "#444"
-      },
-      setor: {
-        fontSize: 14,
-        bold: true,
-        color: "#3420eb"
-      },
-      assinaturaLider: {
-        fontSize: 12,
-        alignment: "left",
-        italics: true
-      }
+      header: { fontSize: 18, bold: true, alignment: "center" },
+      subheader: { fontSize: 12, alignment: "center", color: "#444" },
+      setor: { fontSize: 14, bold: true, color: "#3420eb" },
+      assinaturaLider: { fontSize: 12, alignment: "left", italics: true },
+      nomePrincipal: { fontSize: 14, bold: true, alignment: "center", margin: [0, 0, 0, 5] },
+      badgeLider: { fontSize: 9, color: "#fff", background: "#ff6f61", bold: true, margin: [2, 2, 2, 2], alignment: "center" },
+      badgeDuplicado: { fontSize: 9, color: "#fff", background: "#c0392b", bold: true, margin: [2, 2, 2, 2], alignment: "center" },
+      badgeConvidado: { fontSize: 9, color: "#fff", background: "#2980b9", bold: true, margin: [2, 2, 2, 2], alignment: "center" }
     },
-    defaultStyle: {
-      fontSize: 8
-    },
+    defaultStyle: { fontSize: 8 },
     pageMargins: [30, 40, 30, 40],
     pageOrientation: "portrait",
-
     footer: function (currentPage, pageCount) {
-      const setorNome = filtroSelecionado
-        ? filtroSelecionado.toUpperCase()
-        : "GERAL";
+      const setorNome = filtroSelecionado ? filtroSelecionado.toUpperCase() : "GERAL";
       return {
         text: `JUVA SUNSET - ${setorNome} - P${currentPage}`,
         alignment: 'right',
@@ -200,12 +193,8 @@ async function gerarPDF() {
 function logout() {
   const auth = getAuth();
   signOut(auth)
-    .then(() => {
-      window.location.href = "admin.html";
-    })
-    .catch((error) => {
-      console.error("Erro ao sair:", error);
-    });
+    .then(() => { window.location.href = "admin.html"; })
+    .catch((error) => { console.error("Erro ao sair:", error); });
 }
 
 window.voltarParaCadastro = function () {
