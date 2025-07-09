@@ -9,7 +9,6 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
 
-// 🔧 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCFzOB4EDaNrdEIcg_NVixSU_Y0tOmf8JM",
   authDomain: "juva-web.firebaseapp.com",
@@ -22,33 +21,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔒 Limites
 const LIMITE_JUVA = 70;
-const DATA_LIMITE = new Date("2025-07-10T00:00:00-03:00"); // 10 de julho às 00h
-
-async function verificarEncerramentoInscricoes() {
-  const agora = new Date();
-
-  if (agora >= DATA_LIMITE) {
-    exibirMensagemEncerramento("As inscrições foram encerradas no dia 10 de julho à meia-noite. Nos vemos no JUVA SUNSET!");
-    return true;
-  }
-
-  // Se ainda não passou do prazo, verifica limite de JUVA
-  const setores = ["AD Sede", "AD Planalto", "AD Icarai", "AD Metropolitano", "AD Quintino Cunha", "AD Arianopolis", "AD Tanupaba"];
-  let totalMembros = 0;
-
-  for (const setor of setores) {
-    const snap = await getDocs(collection(db, "cadastros", setor, "inscritos"));
-    totalMembros += snap.size;
-    if (totalMembros >= LIMITE_JUVA) {
-      exibirMensagemEncerramento("Limite de 70 inscritos da JUVA foi atingido. As inscrições foram encerradas.");
-      return true;
-    }
-  }
-
-  return false;
-}
+const DATA_LIMITE = new Date("2025-07-10T00:00:00-03:00");
 
 function exibirMensagemEncerramento(texto) {
   document.getElementById("passo1")?.remove();
@@ -68,17 +42,6 @@ let originalMensagemMembro = "";
 let originalMensagemConvidado = "";
 
 window.addEventListener("DOMContentLoaded", async () => {
-  const bloqueado = await verificarEncerramentoInscricoes();
-  if (bloqueado) return;
-
-  const form = document.getElementById('cadastroForm');
-  if (!form) return;
-
-  ['contato', 'contato_emergencia', 'contatoConvidador'].forEach(id => {
-    const input = document.getElementById(id);
-    if (input) aplicarMascaraTelefone(input);
-  });
-
   const mMembro = document.getElementById('mensagemMembro');
   const mConvidado = document.getElementById('mensagemConvidado');
   if (mMembro) originalMensagemMembro = mMembro.innerHTML;
@@ -91,27 +54,38 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (cadastroFeito && nomeSalvo) {
     const saudacaoHTML = `<h2 style="color: green;">✅ Cadastro Concluído!</h2><br><h3>Olá, ${nomeSalvo}!</h3><br>`;
 
-    if (ehConvidado) {
+    if (ehConvidado && mConvidado) {
       mConvidado.innerHTML = saudacaoHTML + originalMensagemConvidado;
       mConvidado.style.display = 'block';
-    } else {
+    } else if (mMembro) {
       mMembro.innerHTML = saudacaoHTML + originalMensagemMembro;
       mMembro.style.display = 'block';
     }
 
-    document.getElementById('passo1').style.display = 'none';
-    document.getElementById('passo2').style.display = 'none';
-    form.style.display = 'none';
-    document.getElementById('camposExtrasMembro').style.display = 'none';
-    document.getElementById('convidadoExtra').style.display = 'none';
+    document.getElementById('passo1')?.remove();
+    document.getElementById('passo2')?.remove();
+    document.getElementById('cadastroForm')?.remove();
+    document.getElementById('camposExtrasMembro')?.remove();
+    document.getElementById('convidadoExtra')?.remove();
+    return;
   }
+
+  const bloqueado = await verificarEncerramentoInscricoes();
+  if (bloqueado) return;
+
+  const form = document.getElementById('cadastroForm');
+  if (!form) return;
+
+  ['contato', 'contato_emergencia', 'contatoConvidador'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) aplicarMascaraTelefone(input);
+  });
 
   const dataInput = document.getElementById("dataNascimento");
   if (dataInput) {
     dataInput.addEventListener("input", () => {
       let valor = dataInput.value.replace(/\D/g, '');
       if (valor.length > 8) valor = valor.slice(0, 8);
-
       if (valor.length >= 5)
         dataInput.value = `${valor.slice(0, 2)}/${valor.slice(2, 4)}/${valor.slice(4)}`;
       else if (valor.length >= 3)
@@ -124,11 +98,29 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+async function verificarEncerramentoInscricoes() {
+  const agora = new Date();
+  if (agora >= DATA_LIMITE) {
+    exibirMensagemEncerramento("As inscrições foram encerradas no dia 10 de julho à meia-noite. Nos vemos no JUVA SUNSET!");
+    return true;
+  }
+  const setores = ["AD Sede", "AD Planalto", "AD Icarai", "AD Metropolitano", "AD Quintino Cunha", "AD Arianopolis", "AD Tanupaba"];
+  let totalMembros = 0;
+  for (const setor of setores) {
+    const snap = await getDocs(collection(db, "cadastros", setor, "inscritos"));
+    totalMembros += snap.size;
+    if (totalMembros >= LIMITE_JUVA) {
+      exibirMensagemEncerramento("Limite de 70 inscritos da JUVA foi atingido. As inscrições foram encerradas.");
+      return true;
+    }
+  }
+  return false;
+}
+
 function aplicarMascaraTelefone(input) {
   input.addEventListener('input', () => {
     let valor = input.value.replace(/\D/g, '');
     if (valor.length > 11) valor = valor.slice(0, 11);
-
     if (valor.length >= 2 && valor.length <= 6) {
       valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
     } else if (valor.length > 6 && valor.length <= 10) {
@@ -136,7 +128,6 @@ function aplicarMascaraTelefone(input) {
     } else if (valor.length === 11) {
       valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
     }
-
     input.value = valor;
   });
 }
@@ -144,23 +135,17 @@ function aplicarMascaraTelefone(input) {
 function verificarObrigatoriedadeIdade() {
   const dataStr = document.getElementById("dataNascimento")?.value;
   if (!dataStr) return;
-
   const [dia, mes, ano] = dataStr.split("/");
   if (!dia || !mes || !ano) return;
-
   const nascimento = new Date(`${ano}-${mes}-${dia}`);
   if (isNaN(nascimento)) return;
-
   const hoje = new Date();
   let idade = hoje.getFullYear() - nascimento.getFullYear();
   const m = hoje.getMonth() - nascimento.getMonth();
   if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
-
   document.getElementById("idade").value = idade;
-
   const nomePai = document.getElementById("nome_pai");
   const nomeMae = document.getElementById("nome_mae");
-
   if (idade < 18) {
     nomePai.required = true;
     nomeMae.required = true;
