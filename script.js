@@ -22,7 +22,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const LIMITE_JUVA = 70;
-const DATA_LIMITE = new Date("2025-07-10T00:00:00-03:00");
+const DATA_LIMITE = new Date("2025-07-10T23:59:00");
 
 function exibirMensagemEncerramento(texto) {
   document.getElementById("passo1")?.remove();
